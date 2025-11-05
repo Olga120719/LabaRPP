@@ -1,9 +1,8 @@
 name: Deploy to GitHub Pages
 
 on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
+  release:
+    types: [created]
 
 jobs:
   deploy:
@@ -12,9 +11,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Get release tag
+        id: vars
+        run: echo "RELEASE_TAG=${{ github.ref_name }}" >> $GITHUB_ENV
+
+      - name: Copy files to version directory
+        run: |
+          mkdir -p ${{ env.RELEASE_TAG }}
+          cp -r * ${{ env.RELEASE_TAG }}/ || true  # Копируем все файлы в папку v{tag}
+
       - name: Deploy to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
-          force_orphan: true
+          branch: gh-pages
+          folder: .
+
